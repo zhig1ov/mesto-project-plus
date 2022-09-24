@@ -6,7 +6,7 @@ import NotFoundError from '../types/Errors/NotFoundError';
 
 export const getUsers = (req: Request, res: Response, next: NextFunction) => {
   User.find({})
-    .then((users) => res.status(200).send(successResponse(users)))
+    .then((users) => res.send(successResponse(users)))
     .catch(next);
 };
 
