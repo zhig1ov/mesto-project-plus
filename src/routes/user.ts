@@ -5,8 +5,8 @@ import {
 
 const userRouter = Router();
 
-userRouter.post('/users', createUser);
-userRouter.get('/users', getUsers);
+userRouter.post('/', createUser);
+userRouter.get('/', getUsers);
 userRouter.get('/:id', findUsersById);
 userRouter.patch('/me', updateUser);
 userRouter.patch('/me/avatar', updateUser);
