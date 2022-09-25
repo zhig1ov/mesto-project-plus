@@ -40,3 +40,18 @@ export const updateUser = (req: Request, res: Response, next: NextFunction) => {
     })
     .catch(next);
 };
+
+export const updateUserAvatar = (req: Request, res: Response, next: NextFunction) => {
+  const { avatar } = req.body;
+  User.findByIdAndUpdate((req as any).user._id, { avatar }, {
+    new: true,
+    runValidators: true,
+  })
+  .then((user) => {
+    if (!user) {
+      throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
+    }
+    res.status(200).send(successResponse(user));
+  })
+  .catch(next);
+};

@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
-import handleErrors from 'middlewares/handleErrors';
+import handleErrors from './middlewares/handleErrors';
 
 const { PORT = 3000, BASE_PATH = "none" } = process.env;
 const app = express();
