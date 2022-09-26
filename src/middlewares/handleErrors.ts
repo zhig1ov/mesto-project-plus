@@ -6,7 +6,7 @@ import { errorResponse } from '../helpers';
 import { ErrorTypesEnum } from '../types/errors';
 import BadRequestError from '../types/Errors/BadRequestError';
 import ConflictingRequestError from '../types/Errors/ConflictingRequestError';
-import { CustomStatusCodeErrors } from '../types/Errors/index'
+import { CustomStatusCodeErrors } from '../types/Errors/index';
 
 const handleErrors: ErrorRequestHandler = (
   err: Error | CustomStatusCodeErrors | MongoError,
