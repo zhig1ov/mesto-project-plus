@@ -4,7 +4,6 @@ import { errors } from 'celebrate';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
 import authRouter from './routes/auth';
-import handleErrors from './middlewares/handleErrors';
 import auth from './middlewares/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import authValidator from './validators/authValidator';
@@ -25,7 +24,6 @@ app.use(authValidator(), auth);
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 
-app.use(handleErrors);
 app.use(errorLogger);
 app.use(errors());
 
