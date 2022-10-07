@@ -5,8 +5,10 @@ import { User } from '../models/user';
 import { successResponse } from '../helpers';
 import NotFoundError from '../types/Errors/NotFoundError';
 import { SECRET_KEY } from '../types/constants';
-import { USER_NOT_FOUND_MESSAGE, INVALID_EMAIL_OR_PASSWORD_MESSAGE } from '../types/errors';
+import { USER_NOT_FOUND_MESSAGE, INVALID_EMAIL_OR_PASSWORD_MESSAGE, USER_EMAIL_EXISTS_MESSAGE } from '../types/errors';
 import AuthError from '../types/Errors/AuthError';
+import BadRequestError from '../types/Errors/BadRequestError';
+import ConflictingRequestError from '../types/Errors/ConflictingRequestError';
 
 const getUsers = (req: Request, res: Response, next: NextFunction) => {
   User.find({})
@@ -22,7 +24,22 @@ const createUser = (req: Request, res: Response, next: NextFunction) => {
         res.send(successResponse(rest));
       })
       .catch(next);
-  }).catch(next);
+  }).catch((err) => {
+    if (err instanceof Error) {
+      switch (err.name) {
+        case 'ValidationError':
+          next(new BadRequestError(INVALID_EMAIL_OR_PASSWORD_MESSAGE));
+          break;
+        case 'CastError':
+          next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
+          break;
+        case 'MongoServerError':
+          next(new ConflictingRequestError(USER_EMAIL_EXISTS_MESSAGE));
+          break;
+        default: next(err);
+      }
+    }
+  });
 };
 
 const getUserById = (req: Request, res: Response, next: NextFunction) => {
@@ -33,7 +50,34 @@ const getUserById = (req: Request, res: Response, next: NextFunction) => {
       }
       res.status(200).send(successResponse(user));
     })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof Error) {
+        if (err.name === 'CastError') {
+          next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
+          return;
+        }
+        next(err);
+      }
+    });
+};
+
+export const findUsersById = (req: Request, res: Response, next: NextFunction) => {
+  User.findById(req.params.id)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
+      }
+      res.status(200).send(successResponse(user));
+    })
+    .catch((err) => {
+      if (err instanceof Error) {
+        if (err.name === 'CastError') {
+          next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
+          return;
+        }
+        next(err);
+      }
+    });
 };
 
 const updateUser = (req: Request, res: Response, next: NextFunction) => {
@@ -47,7 +91,19 @@ const updateUser = (req: Request, res: Response, next: NextFunction) => {
       }
       res.status(200).send(successResponse(user));
     })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof Error) {
+        switch (err.name) {
+          case 'ValidationError':
+            next(new BadRequestError(INVALID_EMAIL_OR_PASSWORD_MESSAGE));
+            break;
+          case 'CastError':
+            next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
+            break;
+          default: next(err);
+        }
+      }
+    });
 };
 
 const updateUserAvatar = (req: Request, res: Response, next: NextFunction) => {
@@ -62,7 +118,19 @@ const updateUserAvatar = (req: Request, res: Response, next: NextFunction) => {
       }
       res.status(200).send(successResponse(user));
     })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof Error) {
+        switch (err.name) {
+          case 'ValidationError':
+            next(new BadRequestError(INVALID_EMAIL_OR_PASSWORD_MESSAGE));
+            break;
+          case 'CastError':
+            next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
+            break;
+          default: next(err);
+        }
+      }
+    });
 };
 
 const login = (req: Request, res: Response, next: NextFunction) => {

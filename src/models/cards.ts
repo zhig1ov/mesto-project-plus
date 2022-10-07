@@ -18,6 +18,12 @@ const cardSchema = new Schema({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator: function(value: string) {
+          return /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-/]))?/.test(value);
+      },
+      message: 'Invalid URL.'
+  },
   },
   owner: {
     type: Schema.Types.ObjectId,

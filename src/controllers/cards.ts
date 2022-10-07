@@ -4,6 +4,7 @@ import { successResponse } from '../helpers';
 import { POST_NOT_FOUND_MESSAGE } from '../types/errors';
 import NotFoundError from '../types/Errors/NotFoundError';
 import ForbiddenError from '../types/Errors/ForbiddenError';
+import BadRequestError from '../types/Errors/BadRequestError';
 
 export const getCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find({})
@@ -31,7 +32,15 @@ export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
     } else {
       throw new ForbiddenError('Пользователь не может удалить чужую карточку.');
     }
-  }).catch(next);
+  }).catch((err) => {
+    if (err instanceof Error) {
+      if (err.name === 'CastError') {
+        next(new NotFoundError('Карточка по указанному id не найдена'));
+        return;
+      }
+      next(err);
+    }
+  });
 };
 
 export const likeCard = (req: Request, res: Response, next: NextFunction) => {
@@ -51,7 +60,19 @@ export const likeCard = (req: Request, res: Response, next: NextFunction) => {
       }
       res.status(200).send(successResponse(data));
     })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof Error) {
+        switch (err.name) {
+          case 'ValidationError':
+            next(new BadRequestError('Переданы некорректные данные'));
+            break;
+          case 'CastError':
+            next(new NotFoundError('Карточка по указанному id не найдена'));
+            break;
+          default: next(err);
+        }
+      }
+    });
 };
 
 export const unlikeCard = (req: Request, res: Response, next: NextFunction) => {
@@ -71,5 +92,17 @@ export const unlikeCard = (req: Request, res: Response, next: NextFunction) => {
       }
       res.status(200).send(successResponse(data));
     })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof Error) {
+        switch (err.name) {
+          case 'ValidationError':
+            next(new BadRequestError('Переданы некорректные данные'));
+            break;
+          case 'CastError':
+            next(new NotFoundError(POST_NOT_FOUND_MESSAGE));
+            break;
+          default: next(err);
+        }
+      }
+    });
 };
