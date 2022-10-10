@@ -9,7 +9,15 @@ import BadRequestError from '../types/Errors/BadRequestError';
 export const getCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find({})
     .then((cards) => res.status(200).send(successResponse(cards)))
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof Error) {
+        if (err.name === 'ValidationError') {
+          next(new BadRequestError('Переданы некорректные данные'));
+          return;
+        }
+        next(err);
+      }
+    });
 };
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
@@ -21,6 +29,10 @@ export const createCard = (req: Request, res: Response, next: NextFunction) => {
 export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
   Card.findById(req.params.cardId).then((card) => {
     if ((card?.owner as any).equals((req as any).user._id)) {
+      if (!card) {
+        next(new NotFoundError('Карточка по указанному id не найдена'));
+        return;
+      }
       Card.deleteOne({ _id: req.params.cardId })
         .then((data) => {
           if (data.deletedCount === 0) {
@@ -33,13 +45,11 @@ export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
       throw new ForbiddenError('Пользователь не может удалить чужую карточку.');
     }
   }).catch((err) => {
-    if (err instanceof Error) {
       if (err.name === 'CastError') {
         next(new NotFoundError('Карточка по указанному id не найдена'));
         return;
       }
       next(err);
-    }
   });
 };
 
@@ -61,7 +71,6 @@ export const likeCard = (req: Request, res: Response, next: NextFunction) => {
       res.status(200).send(successResponse(data));
     })
     .catch((err) => {
-      if (err instanceof Error) {
         switch (err.name) {
           case 'ValidationError':
             next(new BadRequestError('Переданы некорректные данные'));
@@ -71,7 +80,6 @@ export const likeCard = (req: Request, res: Response, next: NextFunction) => {
             break;
           default: next(err);
         }
-      }
     });
 };
 
@@ -93,7 +101,6 @@ export const unlikeCard = (req: Request, res: Response, next: NextFunction) => {
       res.status(200).send(successResponse(data));
     })
     .catch((err) => {
-      if (err instanceof Error) {
         switch (err.name) {
           case 'ValidationError':
             next(new BadRequestError('Переданы некорректные данные'));
@@ -103,6 +110,5 @@ export const unlikeCard = (req: Request, res: Response, next: NextFunction) => {
             break;
           default: next(err);
         }
-      }
     });
 };

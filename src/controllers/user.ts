@@ -23,22 +23,18 @@ const createUser = (req: Request, res: Response, next: NextFunction) => {
         const { password, ...rest } = user.toObject();
         res.send(successResponse(rest));
       })
-      .catch(next);
-  }).catch((err) => {
-    if (err instanceof Error) {
-      switch (err.name) {
-        case 'ValidationError':
-          next(new BadRequestError(INVALID_EMAIL_OR_PASSWORD_MESSAGE));
-          break;
-        case 'CastError':
-          next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
-          break;
-        case 'MongoServerError':
-          next(new ConflictingRequestError(USER_EMAIL_EXISTS_MESSAGE));
-          break;
-        default: next(err);
-      }
-    }
+      .catch((err) => {
+        if (err.code = 11000 && err.code === 'MongoError') {
+          throw new ConflictingRequestError(USER_EMAIL_EXISTS_MESSAGE);
+        }
+        if (err.name = 'ValidationError') {
+          throw new BadRequestError(INVALID_EMAIL_OR_PASSWORD_MESSAGE);
+        }
+        if (err.name = 'CastError') {
+          throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
+        }
+        next(err);
+      })
   });
 };
 
@@ -51,13 +47,11 @@ const getUserById = (req: Request, res: Response, next: NextFunction) => {
       res.status(200).send(successResponse(user));
     })
     .catch((err) => {
-      if (err instanceof Error) {
         if (err.name === 'CastError') {
           next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
           return;
         }
         next(err);
-      }
     });
 };
 
@@ -70,13 +64,11 @@ export const findUsersById = (req: Request, res: Response, next: NextFunction) =
       res.status(200).send(successResponse(user));
     })
     .catch((err) => {
-      if (err instanceof Error) {
         if (err.name === 'CastError') {
           next(new NotFoundError(USER_NOT_FOUND_MESSAGE));
           return;
         }
         next(err);
-      }
     });
 };
 
@@ -92,7 +84,6 @@ const updateUser = (req: Request, res: Response, next: NextFunction) => {
       res.status(200).send(successResponse(user));
     })
     .catch((err) => {
-      if (err instanceof Error) {
         switch (err.name) {
           case 'ValidationError':
             next(new BadRequestError(INVALID_EMAIL_OR_PASSWORD_MESSAGE));
@@ -102,7 +93,6 @@ const updateUser = (req: Request, res: Response, next: NextFunction) => {
             break;
           default: next(err);
         }
-      }
     });
 };
 
@@ -119,7 +109,6 @@ const updateUserAvatar = (req: Request, res: Response, next: NextFunction) => {
       res.status(200).send(successResponse(user));
     })
     .catch((err) => {
-      if (err instanceof Error) {
         switch (err.name) {
           case 'ValidationError':
             next(new BadRequestError(INVALID_EMAIL_OR_PASSWORD_MESSAGE));
@@ -129,7 +118,6 @@ const updateUserAvatar = (req: Request, res: Response, next: NextFunction) => {
             break;
           default: next(err);
         }
-      }
     });
 };
 
