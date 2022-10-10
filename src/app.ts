@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Response, Request } from 'express';
 import mongoose from 'mongoose';
 import { errors } from 'celebrate';
 import userRouter from './routes/user';
@@ -7,6 +7,11 @@ import authRouter from './routes/auth';
 import auth from './middlewares/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import authValidator from './validators/authValidator';
+
+interface Error {
+  statusCode: number,
+  message: string,
+}
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -26,6 +31,22 @@ app.use('/cards', cardRouter);
 
 app.use(errorLogger);
 app.use(errors());
+app.use((
+  err: Error,
+  req: Request,
+  res: Response,
+  // eslint-disable-next-line no-unused-vars
+  next: NextFunction,
+) => {
+  const { statusCode = 500, message } = err;
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
+});
 
 const start = async () => {
   try {
