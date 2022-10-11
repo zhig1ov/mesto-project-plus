@@ -10,29 +10,31 @@ export const getCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find({})
     .then((cards) => res.status(200).send(successResponse(cards)))
     .catch((err) => {
-      if (err instanceof Error) {
-        if (err.name === 'ValidationError') {
-          next(new BadRequestError('Переданы некорректные данные'));
-          return;
-        }
-        next(err);
-      }
-    });
+      next(err);
+    })
 };
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
   Card.create({ ...req.body, owner: (req as any).user._id })
     .then((card) => res.status(201).send(successResponse(card)))
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof Error) {
+        if (err.name === 'ValidationError') {
+          next(new BadRequestError('Переданы некорректные данные'));
+          return;
+        }
+        next();
+      }
+    });
 };
 
 export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
   Card.findById(req.params.cardId).then((card) => {
+    if (!card) {
+      next(new NotFoundError('Карточка по указанному id не найдена'));
+      return;
+    }
     if ((card?.owner as any).equals((req as any).user._id)) {
-      if (!card) {
-        next(new NotFoundError('Карточка по указанному id не найдена'));
-        return;
-      }
       Card.deleteOne({ _id: req.params.cardId })
         .then((data) => {
           if (data.deletedCount === 0) {
